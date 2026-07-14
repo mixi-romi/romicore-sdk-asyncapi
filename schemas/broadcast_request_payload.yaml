@@ -1,0 +1,23 @@
+$defs:
+  DiscoverAvailableRomisRequestData:
+    description: 利用可能な Romi の発見リクエストのペイロードデータクラス
+    properties: {}
+    title: DiscoverAvailableRomisRequestData
+    type: object
+properties:
+  request_id:
+    title: リクエストID
+    type: string
+  request_type:
+    const: discover_available_romis
+    title: リクエストタイプ
+    type: string
+  data:
+    $ref: '#/$defs/DiscoverAvailableRomisRequestData'
+    title: リクエストデータ
+required:
+- request_id
+- request_type
+- data
+title: DiscoverAvailableRomisRequestPayload
+type: object

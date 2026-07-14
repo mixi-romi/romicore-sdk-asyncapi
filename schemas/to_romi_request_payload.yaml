@@ -1,0 +1,393 @@
+$defs:
+  AddToolRequestData:
+    description: ツールを追加するためのペイロードデータクラス
+    properties:
+      name:
+        examples:
+        - add_shopping_item
+        title: ツールの名前
+        type: string
+      property:
+        $ref: '#/$defs/ToolProperty'
+        title: ツールのプロパティ
+    required:
+    - name
+    - property
+    title: AddToolRequestData
+    type: object
+  AddToolRequestPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: add_tool
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/AddToolRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: AddToolRequestPayload
+    type: object
+  ConversationSpeaker:
+    description: 会話ストリームで扱う話者の指定
+    enum:
+    - romi
+    title: ConversationSpeaker
+    type: string
+  CreateRomiResponseRequestData:
+    description: ROMIの発話を生成するためのペイロードデータクラス
+    properties:
+      instruction:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        description: どのような内容のレスポンスを生成するべきかを具体的に指示してください。
+        examples:
+        - 朝のあいさつをしてください。明るい内容で最後にユーザーへ軽い質問を1つしてください。
+        title: Romiの発話生成のためのインストラクション
+      user_utterance:
+        anyOf:
+        - $ref: '#/$defs/RomiResponseUserUtterance'
+        - type: 'null'
+        default: null
+        title: ユーザーの発話データ
+    title: CreateRomiResponseRequestData
+    type: object
+  CreateRomiResponseRequestPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: create_romi_response
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/CreateRomiResponseRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: CreateRomiResponseRequestPayload
+    type: object
+  Emotion:
+    description: Romi発話の感情の種類
+    enum:
+    - normal
+    - angry
+    - cry
+    - fearful
+    - heart
+    - joy
+    - kiss
+    - laughing
+    - relaxed
+    - scream
+    - sob
+    - surprised
+    - sweat_smile
+    - thinking
+    - tired
+    title: Emotion
+    type: string
+  GetRegisteredToolsRequestData:
+    description: 登録済みツール一覧取得リクエストのペイロードデータクラス
+    properties: {}
+    title: GetRegisteredToolsRequestData
+    type: object
+  GetRegisteredToolsRequestPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: get_registered_tools
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/GetRegisteredToolsRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: GetRegisteredToolsRequestPayload
+    type: object
+  Language:
+    description: Romi発話の言語の種類
+    enum:
+    - JPN
+    - ENG
+    title: Language
+    type: string
+  RefreshSdkDeviceCertificateRequestData:
+    description: SDK デバイス証明書の更新するためのリクエストのペイロードデータクラス
+    properties:
+      csr:
+        description: 証明書署名要求（CSR）を設定します。
+        examples:
+        - '-----BEGIN CERTIFICATE REQUEST-----
+
+          *******
+
+          -----END CERTIFICATE REQUEST-----'
+        title: CSR文字列
+        type: string
+    required:
+    - csr
+    title: RefreshSdkDeviceCertificateRequestData
+    type: object
+  RefreshSdkDeviceCertificateRequestPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: refresh_sdk_device_certificate
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/RefreshSdkDeviceCertificateRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: RefreshSdkDeviceCertificateRequestPayload
+    type: object
+  RemoveToolRequestData:
+    description: ツール削除リクエストのペイロードデータクラス
+    properties:
+      name:
+        examples:
+        - target
+        title: 削除対象ツール名
+        type: string
+    required:
+    - name
+    title: RemoveToolRequestData
+    type: object
+  RemoveToolRequestPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: remove_tool
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/RemoveToolRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: RemoveToolRequestPayload
+    type: object
+  RomiResponseUserUtterance:
+    description: ユーザーの発話を表すクラス
+    properties:
+      utterance:
+        description: ユーザーの発話を設定します。
+        examples:
+        - おはよう。
+        title: ユーザーの発話テキスト
+        type: string
+      should_include_in_conversation_log:
+        description: user_utteranceに値を設定した場合はこのフラグも設定してください。Trueの場合、user_utteranceが会話ログに含まれます。Falseの場合、会話ログには含まれません。
+        title: 会話ログに含めるかどうか
+        type: boolean
+    required:
+    - utterance
+    - should_include_in_conversation_log
+    title: RomiResponseUserUtterance
+    type: object
+  SpeakTextRequestData:
+    description: Romiに指定したテキストを発話させるためのペイロードデータクラス
+    properties:
+      emotion:
+        $ref: '#/$defs/Emotion'
+        title: 発話の感情
+      lang:
+        $ref: '#/$defs/Language'
+        title: 発話の言語
+      text:
+        description: Romiに発話させるテキストを与えてください。空文字はエラーとなります。
+        examples:
+        - こんにちは、ロミィだよ！オーナーは調子どう？
+        - Hi, I am Romi! How are you?
+        minLength: 1
+        title: 発話するテキスト
+        type: string
+    required:
+    - emotion
+    - lang
+    - text
+    title: SpeakTextRequestData
+    type: object
+  SpeakTextRequestPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: speak_text
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/SpeakTextRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: SpeakTextRequestPayload
+    type: object
+  StartConversationStreamRequestData:
+    description: 会話ストリーム開始リクエストのペイロードデータクラス
+    properties:
+      speaker:
+        $ref: '#/$defs/ConversationSpeaker'
+        description: 会話ストリームで有効化する話者を指定します。
+        examples:
+        - romi
+        title: 話者
+    required:
+    - speaker
+    title: StartConversationStreamRequestData
+    type: object
+  StartConversationStreamRequestPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: start_conversation_stream
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/StartConversationStreamRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: StartConversationStreamRequestPayload
+    type: object
+  StopConversationStreamRequestData:
+    description: 会話ストリーム停止リクエストのペイロードデータクラス
+    properties: {}
+    title: StopConversationStreamRequestData
+    type: object
+  StopConversationStreamRequestPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: stop_conversation_stream
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/StopConversationStreamRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: StopConversationStreamRequestPayload
+    type: object
+  ToolProperty:
+    description: ツールのプロパティ
+    properties:
+      description:
+        examples:
+        - 買い物リストにアイテムを追加します。
+        title: ツールの説明
+        type: string
+      parameters:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        description: 'ツールが受け取る引数の定義を JSON Schema 形式の文字列で指定します。省略（None）可能で、引数が不要なツールでは未指定にします。
+
+
+          指定する場合の制約:
+
+          - 構文的に正しい JSON 文字列であること。
+
+          - トップレベルが JSON オブジェクト ``{ ... }`` であること（配列やスカラーは不可）。
+
+          - 形式は OpenAI Realtime API の function tool ``parameters`` に準拠した JSON Schema（``type:
+          object`` + ``properties`` + 任意で ``required``）を推奨します。
+
+          '
+        examples:
+        - '{"type": "object", "properties": {"item": {"type": "string", "description":
+          "追加する商品名"}}, "required": ["item"]}'
+        title: ツールのパラメータ定義 (JSON Schema 形式)
+      additional_base_instruction:
+        description: どのような場合にこのツールが呼び出されるべきかを具体的に指示してください。ツールの名称を必ず含めてください。
+        examples:
+        - ユーザーが買い物リストへの追加を依頼した場合（例：「牛乳を追加して」「卵も買わなきゃ」など）に、add_shopping_item を呼び出す。
+        title: ツール呼び出しのためのインストラクション
+        type: string
+      additional_response_instruction:
+        description: 通常時はこのインストラクションは使用されません。ツール実行時のみ追加されてレスポンスが生成されます。
+        examples:
+        - 買い物リストにアイテムを追加したことをユーザーに伝えてください。
+        title: ツール実行時のレスポンス生成で個別に追加するインストラクション
+        type: string
+      skill:
+        $ref: '#/$defs/ToolSkill'
+        title: ツール呼び出し時に Romi 内部で実行する処理の種類
+    required:
+    - description
+    - additional_base_instruction
+    - additional_response_instruction
+    - skill
+    title: ToolProperty
+    type: object
+  ToolSkill:
+    description: 'ツールが呼び出された際に、Romi が内部で実行する処理の種類。
+
+
+      各処理の挙動は以下のとおりです。
+
+
+      - ``RESET_CONVERSATION``: 会話セッションをリセットします。
+
+
+      - ``DOWNLOAD_PICTURE``: ``get_resource_url`` リクエストを発行し、
+
+      得られた URL から画像をダウンロードして、会話モデルに渡します。
+
+      利用方法は ``examples/respond_resource_url.py`` を参照してください。
+
+
+      - ``NO_OPERATION``: Romi 側では特別な処理をしません。'
+    enum:
+    - reset_conversation
+    - download_picture
+    - no_operation
+    title: ToolSkill
+    type: string
+discriminator: request_type
+oneOf:
+- $ref: '#/$defs/AddToolRequestPayload'
+- $ref: '#/$defs/RemoveToolRequestPayload'
+- $ref: '#/$defs/CreateRomiResponseRequestPayload'
+- $ref: '#/$defs/RefreshSdkDeviceCertificateRequestPayload'
+- $ref: '#/$defs/GetRegisteredToolsRequestPayload'
+- $ref: '#/$defs/StartConversationStreamRequestPayload'
+- $ref: '#/$defs/StopConversationStreamRequestPayload'
+- $ref: '#/$defs/SpeakTextRequestPayload'

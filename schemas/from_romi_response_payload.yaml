@@ -1,0 +1,480 @@
+$defs:
+  AddToolResponseData:
+    description: ツールの追加に対するレスポンスのペイロードデータクラス
+    properties: {}
+    title: AddToolResponseData
+    type: object
+  AddToolResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: add_tool
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/AddToolResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - data
+    - ok
+    title: AddToolResponseSuccessPayload
+    type: object
+  CapabilityEntry:
+    description: 名前とバージョン一覧を持つ API エントリ。
+    properties:
+      name:
+        title: API 名
+        type: string
+      versions:
+        items:
+          $ref: '#/$defs/VersionDescriptor'
+        title: サポートバージョン一覧
+        type: array
+      response_timeout_ms:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        default: null
+        description: from_romi_request エントリ専用。to_romi_request / event では None。
+        title: ファームウェアが応答を待つ上限 (ミリ秒)
+    required:
+    - name
+    - versions
+    title: CapabilityEntry
+    type: object
+  CapabilityVersionState:
+    description: API バージョンの状態。
+    enum:
+    - active
+    - deprecated
+    - removed
+    title: CapabilityVersionState
+    type: string
+  CreateRomiResponseResponseData:
+    description: 'ROMIの発話を表すレスポンスデータクラス
+
+
+      発話は複数チャンクに分かれて生成されるため、text/emotion の組を
+
+      発話順のリストとして保持します。'
+    properties:
+      utterances:
+        items:
+          $ref: '#/$defs/CreateRomiResponseUtterance'
+        title: Romi発話（text, emotion）のリスト
+        type: array
+    required:
+    - utterances
+    title: CreateRomiResponseResponseData
+    type: object
+  CreateRomiResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: create_romi_response
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/CreateRomiResponseResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - data
+    - ok
+    title: CreateRomiResponseSuccessPayload
+    type: object
+  CreateRomiResponseUtterance:
+    description: ROMIの発話単位（text, emotion）を表すデータクラス
+    properties:
+      text:
+        title: Romiの発話テキスト
+        type: string
+      emotion:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        title: Romiの発話の感情
+    required:
+    - text
+    title: CreateRomiResponseUtterance
+    type: object
+  DiscoverAvailableRomisResponseData:
+    description: 利用可能な Romi の発見に対するレスポンスのペイロードデータクラス
+    properties:
+      model:
+        title: Romiのモデル名
+        type: string
+      serial_number:
+        title: Romiのシリアルナンバー
+        type: string
+      capability:
+        anyOf:
+        - $ref: '#/$defs/RomiCapability'
+        - type: 'null'
+        default: null
+        title: Romiのケイパビリティ情報
+    required:
+    - model
+    - serial_number
+    title: DiscoverAvailableRomisResponseData
+    type: object
+  DiscoverAvailableRomisResponsePayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: discover_available_romis
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/DiscoverAvailableRomisResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - data
+    - ok
+    title: DiscoverAvailableRomisResponsePayload
+    type: object
+  ErrorInfo:
+    description: エラー情報のデータクラス
+    properties:
+      code:
+        title: エラーコード
+        type: string
+      message:
+        title: エラーメッセージ
+        type: string
+    required:
+    - code
+    - message
+    title: ErrorInfo
+    type: object
+  ErrorResponsePayload:
+    description: 'from_romi レスポンス共通のエラー payload。
+
+
+      エラー時の構造は ``request_type`` 以外すべての API で同一のため単一の payload に
+
+      集約する。許容する ``request_type`` は ``_FromRomiResponseRequestType`` を参照。
+
+      トップレベルの ``ok`` discriminator により成功ユニオンと排他に振り分けられる。'
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        enum:
+        - discover_available_romis
+        - add_tool
+        - remove_tool
+        - create_romi_response
+        - refresh_sdk_device_certificate
+        - get_registered_tools
+        - start_conversation_stream
+        - stop_conversation_stream
+        - speak_text
+        - unspecified
+        title: リクエストタイプ
+        type: string
+      ok:
+        const: false
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+      error:
+        $ref: '#/$defs/ErrorInfo'
+        title: エラーメッセージ (okがFalseの場合にエラー内容を記述)
+    required:
+    - request_id
+    - request_type
+    - ok
+    - error
+    title: ErrorResponsePayload
+    type: object
+  GetRegisteredToolsResponseData:
+    description: 登録済みツール一覧取得レスポンスのペイロードデータクラス
+    properties:
+      tool_names:
+        description: Romi に登録済みのツール名配列を設定します。
+        examples:
+        - - re_tool1
+          - re_tool2
+          - re_tool3
+        items:
+          type: string
+        title: 登録済みツール名一覧
+        type: array
+    required:
+    - tool_names
+    title: GetRegisteredToolsResponseData
+    type: object
+  GetRegisteredToolsResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: get_registered_tools
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/GetRegisteredToolsResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - data
+    - ok
+    title: GetRegisteredToolsResponseSuccessPayload
+    type: object
+  RefreshSdkDeviceCertificateResponseData:
+    description: SDK デバイス証明書の更新に対するレスポンスのペイロードデータクラス
+    properties:
+      ca_chain:
+        description: 更新された SDK デバイス証明書の CA チェーンを設定します。
+        examples:
+        - '-----BEGIN CERTIFICATE-----
+
+          *******
+
+          -----END CERTIFICATE-----'
+        title: CAチェーン文字列
+        type: string
+      certificate:
+        description: 更新された SDK デバイス証明書を設定します。
+        examples:
+        - '-----BEGIN CERTIFICATE-----
+
+          *******
+
+          -----END CERTIFICATE-----'
+        title: 証明書文字列
+        type: string
+    required:
+    - ca_chain
+    - certificate
+    title: RefreshSdkDeviceCertificateResponseData
+    type: object
+  RefreshSdkDeviceCertificateResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: refresh_sdk_device_certificate
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/RefreshSdkDeviceCertificateResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - data
+    - ok
+    title: RefreshSdkDeviceCertificateResponseSuccessPayload
+    type: object
+  RemoveToolResponseData:
+    description: ツール削除に対するレスポンスのペイロードデータクラス
+    properties: {}
+    title: RemoveToolResponseData
+    type: object
+  RemoveToolResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: remove_tool
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/RemoveToolResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - data
+    - ok
+    title: RemoveToolResponseSuccessPayload
+    type: object
+  RomiCapability:
+    description: Romi のケイパビリティ情報。
+    properties:
+      protocol_version:
+        title: プロトコルバージョン
+        type: integer
+      firmware_version:
+        title: ファームウェアバージョン (情報のみ)
+        type: string
+      to_romi_request:
+        items:
+          $ref: '#/$defs/CapabilityEntry'
+        title: SDK→Romi で叩ける API 一覧
+        type: array
+      from_romi_request:
+        items:
+          $ref: '#/$defs/CapabilityEntry'
+        title: Romi→SDK で来るリクエスト一覧
+        type: array
+      event:
+        items:
+          $ref: '#/$defs/CapabilityEntry'
+        title: Romi→SDK の通知一覧
+        type: array
+    required:
+    - protocol_version
+    - firmware_version
+    - to_romi_request
+    - from_romi_request
+    - event
+    title: RomiCapability
+    type: object
+  SpeakTextResponseData:
+    description: Romiへのテキストの発話リクエストに対するレスポンスペイロードデータクラス
+    properties: {}
+    title: SpeakTextResponseData
+    type: object
+  SpeakTextResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: speak_text
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/SpeakTextResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - ok
+    title: SpeakTextResponseSuccessPayload
+    type: object
+  StartConversationStreamResponseData:
+    description: 会話ストリーム開始リクエストへのレスポンスペイロードデータクラス
+    properties: {}
+    title: StartConversationStreamResponseData
+    type: object
+  StartConversationStreamResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: start_conversation_stream
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/StartConversationStreamResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - ok
+    title: StartConversationStreamResponseSuccessPayload
+    type: object
+  StopConversationStreamResponseData:
+    description: 会話ストリーム停止リクエストへのレスポンスペイロードデータクラス
+    properties: {}
+    title: StopConversationStreamResponseData
+    type: object
+  StopConversationStreamResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: stop_conversation_stream
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/StopConversationStreamResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - ok
+    title: StopConversationStreamResponseSuccessPayload
+    type: object
+  VersionDescriptor:
+    description: API の単一バージョンエントリ。
+    properties:
+      version:
+        title: バージョン番号
+        type: string
+      state:
+        $ref: '#/$defs/CapabilityVersionState'
+        title: バージョン状態
+      sunset:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        title: 廃止予定日 (deprecated 時のみ)
+    required:
+    - version
+    - state
+    title: VersionDescriptor
+    type: object
+discriminator: ok
+oneOf:
+- discriminator: request_type
+  oneOf:
+  - $ref: '#/$defs/DiscoverAvailableRomisResponsePayload'
+  - $ref: '#/$defs/AddToolResponseSuccessPayload'
+  - $ref: '#/$defs/RemoveToolResponseSuccessPayload'
+  - $ref: '#/$defs/CreateRomiResponseSuccessPayload'
+  - $ref: '#/$defs/RefreshSdkDeviceCertificateResponseSuccessPayload'
+  - $ref: '#/$defs/GetRegisteredToolsResponseSuccessPayload'
+  - $ref: '#/$defs/StartConversationStreamResponseSuccessPayload'
+  - $ref: '#/$defs/StopConversationStreamResponseSuccessPayload'
+  - $ref: '#/$defs/SpeakTextResponseSuccessPayload'
+- $ref: '#/$defs/ErrorResponsePayload'

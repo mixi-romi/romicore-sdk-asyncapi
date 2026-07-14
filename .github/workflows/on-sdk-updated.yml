@@ -1,0 +1,93 @@
+name: On SDK Updated
+
+on:
+  repository_dispatch:
+    types: [schema-updated]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout asyncapi repo
+        uses: actions/checkout@v4
+        with:
+          path: romicore-sdk-asyncapi
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.ROMICORE_SDK_DOC_APP_ID }}
+          private-key: ${{ secrets.ROMICORE_SDK_DOC_APP_PRIVATE_KEY }}
+          owner: mixi-romi
+          repositories: romicore-sdk-py
+
+      - name: Checkout romicore-sdk-py
+        uses: actions/checkout@v4
+        with:
+          repository: mixi-romi/romicore-sdk-py
+          path: romicore-sdk-py
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Generate schema yaml
+        working-directory: romicore-sdk-py
+        run: |
+          uv sync
+          # !! Expose ONLY public APIs !!
+          uv run tools/generate_json_schema.py
+
+      - name: Copy schema yaml
+        run: |
+          rm -rf romicore-sdk-asyncapi/schemas
+          cp -r romicore-sdk-py/schemas romicore-sdk-asyncapi/schemas
+
+      - name: Commit schema yaml
+        working-directory: romicore-sdk-asyncapi
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ./schemas
+          git diff --cached --quiet && echo "No changes to commit" || git commit -m "chore: update asyncapi schema from romicore-sdk-py (${{ github.event.client_payload.sha }})"
+          git push
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build AsyncAPI HTML
+        working-directory: romicore-sdk-asyncapi
+        run: |
+          npx @asyncapi/generator@2 asyncapi.yml @asyncapi/html-template -o ./asyncapi
+
+      - name: Build Zensical site
+        working-directory: romicore-sdk-asyncapi
+        run: |
+          uv sync
+          uv run zensical build
+
+      - name: Prepare pages artifact
+        run: |
+          cp -r romicore-sdk-asyncapi/asyncapi romicore-sdk-asyncapi/site/asyncapi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: romicore-sdk-asyncapi/site/
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

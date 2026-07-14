@@ -1,0 +1,44 @@
+$defs:
+  GetResourceUrlRequestData:
+    description: リソースURL取得リクエストのペイロードデータクラス
+    properties:
+      resource_id:
+        title: リソースID
+        type: string
+      resource_type:
+        $ref: '#/$defs/ResourceType'
+        title: リソースタイプ
+      tool_name:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        title: ツール名
+    required:
+    - resource_id
+    - resource_type
+    title: GetResourceUrlRequestData
+    type: object
+  ResourceType:
+    description: リソースタイプ
+    enum:
+    - streaming_conversation_image_url
+    title: ResourceType
+    type: string
+properties:
+  request_id:
+    title: リクエストID
+    type: string
+  request_type:
+    const: get_resource_url
+    title: リクエストタイプ
+    type: string
+  data:
+    $ref: '#/$defs/GetResourceUrlRequestData'
+    title: リクエストデータ
+required:
+- request_id
+- request_type
+- data
+title: GetResourceUrlRequestPayload
+type: object

@@ -1,0 +1,87 @@
+$defs:
+  ErrorInfo:
+    description: エラー情報のデータクラス
+    properties:
+      code:
+        title: エラーコード
+        type: string
+      message:
+        title: エラーメッセージ
+        type: string
+    required:
+    - code
+    - message
+    title: ErrorInfo
+    type: object
+  ErrorResponsePayload:
+    description: 'to_romi レスポンス共通のエラー payload（from_romi_response と同形）。
+
+
+      ``request_type`` はこのモジュールが扱う種別（成功側と同じ集合）に限定する。
+
+      成功 API が増えたら ``_ToRomiResponseRequestType`` に追加する。'
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: get_resource_url
+        title: リクエストタイプ
+        type: string
+      ok:
+        const: false
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+      error:
+        $ref: '#/$defs/ErrorInfo'
+        title: エラーメッセージ (okがFalseの場合にエラー内容を記述)
+    required:
+    - request_id
+    - request_type
+    - ok
+    - error
+    title: ErrorResponsePayload
+    type: object
+  GetResourceUrlResponseData:
+    description: リソースURLを応答するためのペイロードデータクラス
+    properties:
+      resource_id:
+        title: リソースID
+        type: string
+      url:
+        examples:
+        - https://example.com/image.jpg
+        title: リソースURL
+        type: string
+    required:
+    - resource_id
+    - url
+    title: GetResourceUrlResponseData
+    type: object
+  GetResourceUrlResponseSuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: get_resource_url
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/GetResourceUrlResponseData'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - data
+    - ok
+    title: GetResourceUrlResponseSuccessPayload
+    type: object
+discriminator: ok
+oneOf:
+- $ref: '#/$defs/GetResourceUrlResponseSuccessPayload'
+- $ref: '#/$defs/ErrorResponsePayload'

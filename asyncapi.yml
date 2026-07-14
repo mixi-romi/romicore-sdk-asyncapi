@@ -1,0 +1,104 @@
+asyncapi: 3.1.0
+info:
+  title: Romi Core SDK API
+  version: "1.0.0"
+  description: API specification for Romi Core SDK, enabling communication between the SDK and the Romi
+
+servers:
+  mosquitto:
+    host: localhost:443
+    protocol: mqtt
+    description: >-
+      接続する MQTT ブローカー。詳細は RomiCore SDK のドキュメントを参照してください。
+
+channels:
+  broadcastRequest:
+    address: "romicoresdk/broadcast/{sdk_id}/request"
+    parameters:
+      sdk_id:
+        description: SDK identifier
+    messages:
+      requestPayload:
+        payload:
+          $ref: "./schemas/broadcast_request_payload.yaml"
+  toRomiRequest:
+    address: "romicoresdk/{romi_id}/{sdk_id}/to_romi/request"
+    parameters:
+      romi_id:
+        description: Romi identifier
+      sdk_id:
+        description: SDK identifier
+    messages:
+      requestPayload:
+        payload:
+          $ref: "./schemas/to_romi_request_payload.yaml"
+  toRomiResponse:
+    address: "romicoresdk/{romi_id}/{sdk_id}/to_romi/response"
+    parameters:
+      romi_id:
+        description: Romi identifier
+      sdk_id:
+        description: SDK identifier
+    messages:
+      responsePayload:
+        payload:
+          $ref: "./schemas/to_romi_response_payload.yaml"
+  fromRomiRequest:
+    address: "romicoresdk/{romi_id}/{sdk_id}/from_romi/request"
+    parameters:
+      romi_id:
+        description: Romi identifier
+      sdk_id:
+        description: SDK identifier
+    messages:
+      requestPayload:
+        payload:
+          $ref: "./schemas/from_romi_request_payload.yaml"
+  fromRomiResponse:
+    address: "romicoresdk/{romi_id}/{sdk_id}/from_romi/response"
+    parameters:
+      romi_id:
+        description: Romi identifier
+      sdk_id:
+        description: SDK identifier
+    messages:
+      responsePayload:
+        payload:
+          $ref: "./schemas/from_romi_response_payload.yaml"
+
+operations:
+  sendRequestToAllRomies:
+    action: "send"
+    summary: SDKから全てのRomiへのリクエスト送信
+    channel:
+      $ref: "#/channels/broadcastRequest"
+    messages:
+      - $ref: "#/channels/broadcastRequest/messages/requestPayload"
+  sendRequestToRomi:
+    action: "send"
+    summary: SDKからRomiへのリクエスト送信
+    channel:
+      $ref: "#/channels/toRomiRequest"
+    messages:
+      - $ref: "#/channels/toRomiRequest/messages/requestPayload"
+  sendResponseToRomi:
+    action: "send"
+    summary: SDKからRomiへのレスポンス送信
+    channel:
+      $ref: "#/channels/toRomiResponse"
+    messages:
+      - $ref: "#/channels/toRomiResponse/messages/responsePayload"
+  receiveRequestFromRomi:
+    action: "receive"
+    summary: RomiからSDKへのリクエスト受信
+    channel:
+      $ref: "#/channels/fromRomiRequest"
+    messages:
+      - $ref: "#/channels/fromRomiRequest/messages/requestPayload"
+  receiveResponseFromRomi:
+    action: "receive"
+    summary: RomiからSDKへのレスポンス受信
+    channel:
+      $ref: "#/channels/fromRomiResponse"
+    messages:
+      - $ref: "#/channels/fromRomiResponse/messages/responsePayload"

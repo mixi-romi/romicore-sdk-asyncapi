@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.py[oc]
+.venv
+
+# Build outputs
+# site/     : zensical build output
+# asyncapi/ : @asyncapi/generator HTML output
+site/
+asyncapi/
