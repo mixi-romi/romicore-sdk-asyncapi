@@ -77,6 +77,27 @@ $defs:
     - data
     title: CreateRomiResponseRequestPayload
     type: object
+  CreateRomiResponseV2RequestPayload:
+    description: 'create_romi_response v2。リクエストの形状はv1と同一で、
+
+      レスポンス側のみutterancesリストへ変わる。'
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: create_romi_response_v2
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/CreateRomiResponseRequestData'
+        title: リクエストデータ
+    required:
+    - request_id
+    - request_type
+    - data
+    title: CreateRomiResponseV2RequestPayload
+    type: object
   Emotion:
     description: Romi発話の感情の種類
     enum:
@@ -386,6 +407,7 @@ oneOf:
 - $ref: '#/$defs/AddToolRequestPayload'
 - $ref: '#/$defs/RemoveToolRequestPayload'
 - $ref: '#/$defs/CreateRomiResponseRequestPayload'
+- $ref: '#/$defs/CreateRomiResponseV2RequestPayload'
 - $ref: '#/$defs/RefreshSdkDeviceCertificateRequestPayload'
 - $ref: '#/$defs/GetRegisteredToolsRequestPayload'
 - $ref: '#/$defs/StartConversationStreamRequestPayload'

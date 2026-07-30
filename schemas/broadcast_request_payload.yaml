@@ -1,8 +1,99 @@
 $defs:
+  CapabilityEntry:
+    description: 名前とバージョン一覧を持つ API エントリ。
+    properties:
+      name:
+        title: API 名
+        type: string
+      versions:
+        items:
+          $ref: '#/$defs/VersionDescriptor'
+        title: サポートバージョン一覧
+        type: array
+      response_timeout_ms:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        default: null
+        description: from_romi_request エントリ専用。to_romi_request では None。
+        title: ファームウェアが応答を待つ上限 (ミリ秒)
+    required:
+    - name
+    - versions
+    title: CapabilityEntry
+    type: object
+  CapabilityVersionState:
+    description: API バージョンの状態。
+    enum:
+    - active
+    - deprecated
+    - removed
+    title: CapabilityVersionState
+    type: string
   DiscoverAvailableRomisRequestData:
     description: 利用可能な Romi の発見リクエストのペイロードデータクラス
-    properties: {}
+    properties:
+      capability:
+        anyOf:
+        - $ref: '#/$defs/SdkCapabilityDeclaration'
+        - type: 'null'
+        default: null
+        title: SDK のケイパビリティ申告
     title: DiscoverAvailableRomisRequestData
+    type: object
+  SdkCapabilityDeclaration:
+    description: 'discover リクエストで SDK が Romi へ申告するケイパビリティ情報。
+
+
+      SDK は Romi→SDK 方向（``from_romi_request``、例 ``get_resource_url``）で
+
+      自分が対応するバージョン一覧を申告する。Romi 側はこれと自身の対応表を
+
+      突き合わせてネゴシエートし、結果を discover レスポンスの
+
+      ``resolved_from_romi_request`` として返す。
+
+
+      SDK→Romi 方向（``to_romi_request``）は Romi が全対応版を静的広告し、
+
+      SDK 側でローカルにネゴシエートするため、この申告には含めない。'
+    properties:
+      protocol_version:
+        default: 1
+        title: プロトコルバージョン
+        type: integer
+      sdk_version:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        title: SDK バージョン (情報/ログ用)
+      from_romi_request:
+        items:
+          $ref: '#/$defs/CapabilityEntry'
+        title: SDK が対応する Romi→SDK リクエスト一覧
+        type: array
+    title: SdkCapabilityDeclaration
+    type: object
+  VersionDescriptor:
+    description: API の単一バージョンエントリ。
+    properties:
+      version:
+        title: バージョン番号
+        type: string
+      state:
+        $ref: '#/$defs/CapabilityVersionState'
+        title: バージョン状態
+      sunset:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        title: 廃止予定日 (deprecated 時のみ)
+    required:
+    - version
+    - state
+    title: VersionDescriptor
     type: object
 properties:
   request_id:

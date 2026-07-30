@@ -27,21 +27,93 @@ $defs:
     - ok
     title: AddToolResponseSuccessPayload
     type: object
+  CapabilityEntry:
+    description: 名前とバージョン一覧を持つ API エントリ。
+    properties:
+      name:
+        title: API 名
+        type: string
+      versions:
+        items:
+          $ref: '#/$defs/VersionDescriptor'
+        title: サポートバージョン一覧
+        type: array
+      response_timeout_ms:
+        anyOf:
+        - type: integer
+        - type: 'null'
+        default: null
+        description: from_romi_request エントリ専用。to_romi_request では None。
+        title: ファームウェアが応答を待つ上限 (ミリ秒)
+    required:
+    - name
+    - versions
+    title: CapabilityEntry
+    type: object
+  CapabilityVersionState:
+    description: API バージョンの状態。
+    enum:
+    - active
+    - deprecated
+    - removed
+    title: CapabilityVersionState
+    type: string
   CreateRomiResponseResponseData:
-    description: ROMIの発話を表すレスポンスデータクラス
+    description: 'ROMIの発話を表すレスポンスデータクラス (v1, baseline)
+
+
+      v2登場前の仕様はtext/emotion単体だったが、現行FWはこの request_type
+
+      (バージョンサフィックス無し)に対して以下のいずれかを返しうる:
+
+
+      - 変更前のFW: ``{"text": ..., "emotion": ...}``
+
+      - v1/v2を併存させていない移行期のFW: ``{"utterances": [...]}``
+
+
+      どちらの形状でも受け取れるよう全フィールドをoptionalにしている。
+
+      正規化は :func:`converters.to_romi_response` が担う。'
     properties:
       text:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
         title: Romiの発話テキスト
-        type: string
       emotion:
         anyOf:
         - type: string
         - type: 'null'
         default: null
         title: Romiの発話の感情
-    required:
-    - text
+      utterances:
+        anyOf:
+        - items:
+            $ref: '#/$defs/CreateRomiResponseUtterance'
+          type: array
+        - type: 'null'
+        default: null
+        title: Romi発話（text, emotion）のリスト
     title: CreateRomiResponseResponseData
+    type: object
+  CreateRomiResponseResponseDataV2:
+    description: 'ROMIの発話を表すレスポンスデータクラス (v2)
+
+
+      発話は複数チャンクに分かれて生成されるため、text/emotion の組を
+
+      発話順のリストとして保持します。'
+    properties:
+      utterances:
+        items:
+          $ref: '#/$defs/CreateRomiResponseUtterance'
+        title: Romi発話（text, emotion）のリスト
+        type: array
+    required:
+    - utterances
+    title: CreateRomiResponseResponseDataV2
     type: object
   CreateRomiResponseSuccessPayload:
     properties:
@@ -66,6 +138,45 @@ $defs:
     - ok
     title: CreateRomiResponseSuccessPayload
     type: object
+  CreateRomiResponseUtterance:
+    description: ROMIの発話単位（text, emotion）を表すデータクラス
+    properties:
+      text:
+        title: Romiの発話テキスト
+        type: string
+      emotion:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        title: Romiの発話の感情
+    required:
+    - text
+    title: CreateRomiResponseUtterance
+    type: object
+  CreateRomiResponseV2SuccessPayload:
+    properties:
+      request_id:
+        title: リクエストID
+        type: string
+      request_type:
+        const: create_romi_response_v2
+        title: リクエストタイプ
+        type: string
+      data:
+        $ref: '#/$defs/CreateRomiResponseResponseDataV2'
+        title: レスポンスデータ
+      ok:
+        const: true
+        title: リクエストの処理が成功したかどうか
+        type: boolean
+    required:
+    - request_id
+    - request_type
+    - data
+    - ok
+    title: CreateRomiResponseV2SuccessPayload
+    type: object
   DiscoverAvailableRomisResponseData:
     description: 利用可能な Romi の発見に対するレスポンスのペイロードデータクラス
     properties:
@@ -75,6 +186,12 @@ $defs:
       serial_number:
         title: Romiのシリアルナンバー
         type: string
+      capability:
+        anyOf:
+        - $ref: '#/$defs/RomiCapability'
+        - type: 'null'
+        default: null
+        title: Romiのケイパビリティ情報
     required:
     - model
     - serial_number
@@ -121,13 +238,11 @@ $defs:
     description: 'from_romi レスポンス共通のエラー payload。
 
 
-      エラー時の構造は ``request_type`` 以外すべての API で同一のため、API ごとに
+      エラー時の構造は ``request_type`` 以外すべての API で同一のため単一の payload に
 
-      クラスを分けず単一の payload に集約する。``request_type`` はこのモジュールが扱う
+      集約する。許容する ``request_type`` は ``_FromRomiResponseRequestType`` を参照。
 
-      種別（成功側と同じ集合）に限定し、方向違いのレスポンスを受理しないようにする。
-
-      トップレベルの ``ok`` discriminator により、成功ユニオンと排他に振り分けられる。'
+      トップレベルの ``ok`` discriminator により成功ユニオンと排他に振り分けられる。'
     properties:
       request_id:
         title: リクエストID
@@ -138,11 +253,13 @@ $defs:
         - add_tool
         - remove_tool
         - create_romi_response
+        - create_romi_response_v2
         - refresh_sdk_device_certificate
         - get_registered_tools
         - start_conversation_stream
         - stop_conversation_stream
         - speak_text
+        - unspecified
         title: リクエストタイプ
         type: string
       ok:
@@ -278,6 +395,43 @@ $defs:
     - ok
     title: RemoveToolResponseSuccessPayload
     type: object
+  RomiCapability:
+    description: 'Romi のケイパビリティ情報。
+
+
+      ``to_romi_request`` は Romi 自身が対応する全バージョンの静的広告であり、
+
+      SDK 側でローカルにネゴシエートする（SDK→Romi 方向）。
+
+      ``resolved_from_romi_request`` は Romi 側が SDK の申告と突き合わせて
+
+      ネゴシエート済みの結果（Romi→SDK 方向）で、エントリごとに ``versions`` が
+
+      1 件（使用可能）または 0 件（共通版なし＝使用不可）になる。'
+    properties:
+      protocol_version:
+        title: プロトコルバージョン
+        type: integer
+      firmware_version:
+        title: ファームウェアバージョン (情報のみ)
+        type: string
+      to_romi_request:
+        items:
+          $ref: '#/$defs/CapabilityEntry'
+        title: SDK→Romi で叩ける API 一覧
+        type: array
+      resolved_from_romi_request:
+        description: エントリごとに versions は 1 件（使用可能）または 0 件（使用不可）。
+        items:
+          $ref: '#/$defs/CapabilityEntry'
+        title: ネゴシエート済みの Romi→SDK リクエスト一覧
+        type: array
+    required:
+    - protocol_version
+    - firmware_version
+    - to_romi_request
+    title: RomiCapability
+    type: object
   SpeakTextResponseData:
     description: Romiへのテキストの発話リクエストに対するレスポンスペイロードデータクラス
     properties: {}
@@ -359,6 +513,26 @@ $defs:
     - ok
     title: StopConversationStreamResponseSuccessPayload
     type: object
+  VersionDescriptor:
+    description: API の単一バージョンエントリ。
+    properties:
+      version:
+        title: バージョン番号
+        type: string
+      state:
+        $ref: '#/$defs/CapabilityVersionState'
+        title: バージョン状態
+      sunset:
+        anyOf:
+        - type: string
+        - type: 'null'
+        default: null
+        title: 廃止予定日 (deprecated 時のみ)
+    required:
+    - version
+    - state
+    title: VersionDescriptor
+    type: object
 discriminator: ok
 oneOf:
 - discriminator: request_type
@@ -367,6 +541,7 @@ oneOf:
   - $ref: '#/$defs/AddToolResponseSuccessPayload'
   - $ref: '#/$defs/RemoveToolResponseSuccessPayload'
   - $ref: '#/$defs/CreateRomiResponseSuccessPayload'
+  - $ref: '#/$defs/CreateRomiResponseV2SuccessPayload'
   - $ref: '#/$defs/RefreshSdkDeviceCertificateResponseSuccessPayload'
   - $ref: '#/$defs/GetRegisteredToolsResponseSuccessPayload'
   - $ref: '#/$defs/StartConversationStreamResponseSuccessPayload'
