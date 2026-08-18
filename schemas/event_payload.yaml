@@ -1,4 +1,26 @@
 $defs:
+  ConnectionStatusChangedEventPayload:
+    description: connection_status_changed event のペイロード。
+    properties:
+      event_id:
+        title: イベントID
+        type: string
+      type:
+        const: connection_status_changed
+        title: イベントタイプ
+        type: string
+      data:
+        discriminator: status
+        oneOf:
+        - $ref: '#/$defs/OnlineStatusData'
+        - $ref: '#/$defs/OfflineStatusData'
+        title: イベントデータ
+    required:
+    - event_id
+    - type
+    - data
+    title: ConnectionStatusChangedEventPayload
+    type: object
   ConversationSpeaker:
     description: 会話ストリームで扱う話者の指定
     enum:
@@ -41,6 +63,44 @@ $defs:
     - type
     - data
     title: ConversationStreamingEventPayload
+    type: object
+  OfflineReason:
+    description: '``offline`` になった理由。'
+    enum:
+    - shutdown
+    - last_will
+    title: OfflineReason
+    type: string
+  OfflineStatusData:
+    description: 'connection_status_changed イベント（``offline``）のデータ。
+
+
+      ``reason`` は必須。'
+    properties:
+      status:
+        const: offline
+        default: offline
+        title: 接続状態
+        type: string
+      reason:
+        $ref: '#/$defs/OfflineReason'
+        title: 切断理由
+    required:
+    - reason
+    title: OfflineStatusData
+    type: object
+  OnlineStatusData:
+    description: 'connection_status_changed イベント（``online``）のデータ。
+
+
+      ``reason`` は持たない。'
+    properties:
+      status:
+        const: online
+        default: online
+        title: 接続状態
+        type: string
+    title: OnlineStatusData
     type: object
   RequestedToolCall:
     description: Romiからツールの呼び出し要求を受信するペイロードクラス
@@ -89,3 +149,4 @@ discriminator: type
 oneOf:
 - $ref: '#/$defs/ToolCallInvokedEventPayload'
 - $ref: '#/$defs/ConversationStreamingEventPayload'
+- $ref: '#/$defs/ConnectionStatusChangedEventPayload'
