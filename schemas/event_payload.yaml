@@ -1,0 +1,91 @@
+$defs:
+  ConversationSpeaker:
+    description: 会話ストリームで扱う話者の指定
+    enum:
+    - romi
+    title: ConversationSpeaker
+    type: string
+  ConversationStreamingEventData:
+    description: conversation_streaming イベントのデータ。
+    properties:
+      speaker:
+        $ref: '#/$defs/ConversationSpeaker'
+        title: 話者
+      utterance_text:
+        title: 発話テキスト
+        type: string
+      timestamp:
+        title: UNIXタイムスタンプ
+        type: integer
+    required:
+    - speaker
+    - utterance_text
+    - timestamp
+    title: ConversationStreamingEventData
+    type: object
+  ConversationStreamingEventPayload:
+    description: conversation_streaming event のペイロード。
+    properties:
+      event_id:
+        title: イベントID
+        type: string
+      type:
+        const: conversation_streaming
+        title: イベントタイプ
+        type: string
+      data:
+        $ref: '#/$defs/ConversationStreamingEventData'
+        title: イベントデータ
+    required:
+    - event_id
+    - type
+    - data
+    title: ConversationStreamingEventPayload
+    type: object
+  RequestedToolCall:
+    description: Romiからツールの呼び出し要求を受信するペイロードクラス
+    properties:
+      name:
+        examples:
+        - get_picture
+        title: ツールの名前
+        type: string
+      call_id:
+        examples:
+        - '12345'
+        title: ツールの呼び出し ID
+        type: string
+      arguments_json:
+        examples:
+        - '{"param1": "value1"}'
+        title: ツールの引数 JSON
+        type: string
+    required:
+    - name
+    - call_id
+    - arguments_json
+    title: RequestedToolCall
+    type: object
+  ToolCallInvokedEventPayload:
+    description: tool_call_invoked event のペイロード。
+    properties:
+      event_id:
+        title: イベントID
+        type: string
+      type:
+        const: tool_call_invoked
+        title: イベントタイプ
+        type: string
+      data:
+        $ref: '#/$defs/RequestedToolCall'
+        title: イベントデータ
+    required:
+    - event_id
+    - type
+    - data
+    title: ToolCallInvokedEventPayload
+    type: object
+discriminator: type
+oneOf:
+- $ref: '#/$defs/ToolCallInvokedEventPayload'
+- $ref: '#/$defs/ConversationStreamingEventPayload'
